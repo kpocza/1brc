@@ -1,10 +1,13 @@
-﻿struct Measurement
+﻿using System.Runtime.CompilerServices;
+
+struct Measurement
 {
     private short _min;
     private short _max;
     private long _sum;
     private int _cnt;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Apply(short m)
     {
         if (m < _min)
@@ -15,6 +18,7 @@
         _cnt++;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Merge(Measurement item)
     {
         if (item._min < _min)

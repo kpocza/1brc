@@ -62,26 +62,31 @@ unsafe class Worker
 
             curIdx += cityLength + 1;
 
-            short sign = 1;
+            int sign = 1;
             if ((*curIdx) == NEG)
             {
                 sign = -1;
                 curIdx++;
             }
+            // branchless version of the above (seems not faster)
+            //var signIndicator = 1 - (((*curIdx) & 0x10) >> 4);
+            //curIdx += signIndicator;
+            //int sign = 1 - (signIndicator << 1);
 
-            short m = 0;
-            // we have exactly 1 fractional digit according to the spec
+            int m = 0;
+            // loop until the second byte is a . ...
             while ((*(curIdx + 1)) != DOT)
             {
-                m = (short)(m * 10 + *curIdx - ZERO);
+                m = m * 10 + *curIdx - ZERO;
                 curIdx++;
             }
-            m = (short)(sign * (m * 100 + (*curIdx - ZERO) * 10 + *(curIdx + 2) - ZERO));
+            // ... since we have exactly 1 fractional digit according to the spec and a.b can be parsed easily
+            m = sign * (m * 100 + (*curIdx - ZERO) * 10 + *(curIdx + 2) - ZERO);
             curIdx += 4;
 
             ref var measurement = ref CollectionsMarshal.GetValueRefOrAddDefault(_measurements, city, out bool exist);
             // default is initialized to full zero. don't need to check bool exist
-            measurement.Apply(m);
+            measurement.Apply((short)m);
         } while (curIdx < localEnd);
     }
 }
