@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 unsafe class Worker
@@ -35,9 +36,6 @@ unsafe class Worker
     {
         const byte NL = 10;
         const byte SEP = (byte)';';
-        const byte DOT = (byte)'.';
-        const byte NEG = (byte)'-';
-        const byte ZERO = (byte)'0';
 
         byte* curIdx = _pointer + _start;
         byte* localEnd = _pointer + _end;
@@ -56,7 +54,8 @@ unsafe class Worker
         do
         {
             // https://en.wikipedia.org/wiki/List_of_short_place_names
-            // we have only some places with 1 char. Let's ignore them.
+            // we have only some places in the world with one letter long name.
+            // let's ignore them and gain some time when finding the ; character.
             var r = new ReadOnlySpan<byte>(curIdx + 2, 98);
             var cityLength = r.IndexOf(SEP) + 2;
 
@@ -64,31 +63,41 @@ unsafe class Worker
 
             curIdx += cityLength + 1;
 
-            int sign = 1;
-            if ((*curIdx) == NEG)
-            {
-                sign = -1;
-                curIdx++;
-            }
-            // branchless version of the above (seems not faster)
-            //var signIndicator = 1 - (((*curIdx) & 0x10) >> 4);
-            //curIdx += signIndicator;
-            //int sign = 1 - (signIndicator << 1);
-
-            int m = 0;
-            // loop until the second byte is a . ...
-            while ((*(curIdx + 1)) != DOT)
-            {
-                m = m * 10 + *curIdx - ZERO;
-                curIdx++;
-            }
-            // ... since we have exactly 1 fractional digit according to the spec and a.b can be parsed easily
-            m = sign * (m * 100 + (*curIdx - ZERO) * 10 + *(curIdx + 2) - ZERO);
-            curIdx += 4;
+            int m = ParseTemperature(ref curIdx);
 
             ref var measurement = ref CollectionsMarshal.GetValueRefOrAddDefault(_measurements, city, out bool exist);
             // default is initialized to full zero. don't need to check bool exist
             measurement.Apply((short)m);
         } while (curIdx < localEnd);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int ParseTemperature(ref byte* curIdx)
+    {
+        const byte DOT = (byte)'.';
+        const byte NEG = (byte)'-';
+        const byte ZERO = (byte)'0';
+
+        int sign = 1;
+        if ((*curIdx) == NEG)
+        {
+            sign = -1;
+            curIdx++;
+        }
+
+        int m = 0;
+        // handling temperature between -99.9 and 99.9 is enough. Simplify double parsing knowing this fact.
+        if ((*(curIdx + 1)) == DOT)
+        {
+            m = sign * ((*curIdx - ZERO) * 10 + *(curIdx + 2) - ZERO);
+            curIdx += 4;
+        }
+        else
+        {
+            m = sign * ((*curIdx - ZERO) * 100 + (*(curIdx + 1) - ZERO) * 10 + *(curIdx + 3) - ZERO);
+            curIdx += 5;
+        }
+
+        return m;
     }
 }
