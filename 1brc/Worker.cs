@@ -74,7 +74,20 @@ unsafe class Worker
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int ParseTemperature(ref byte* curIdx)
     {
-        const byte DOT = (byte)'.';
+        // hacky version of number parsing between -99.9 and 99.9
+        var signIndicator = 1 - (((*curIdx) & 0x10) >> 4);
+        curIdx += signIndicator;
+        int sign = 1 - (signIndicator << 1);
+
+        int num = *(int*)curIdx;
+
+        int lessThan10NumberIndicator = 1 - ((num & 0x1000) >> 12);
+        num <<= (lessThan10NumberIndicator << 3);
+        num &= 0x0f000f0f;
+        curIdx += 5 - lessThan10NumberIndicator;
+        return sign * (int)((((long)num * 0x640a0001) >> 24) & 0x3FF);
+
+/*      const byte DOT = (byte)'.';
         const byte NEG = (byte)'-';
         const byte ZERO = (byte)'0';
 
@@ -98,6 +111,6 @@ unsafe class Worker
             curIdx += 5;
         }
 
-        return m;
+        return m;*/
     }
 }
