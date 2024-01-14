@@ -1,7 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text;
+﻿using System.Text;
 
-unsafe class City
+unsafe struct City
 {
     private readonly byte* _start;
     private readonly int _length;
@@ -14,14 +13,15 @@ unsafe class City
 
     internal class CityComparer : IEqualityComparer<City>
     {
-        public bool Equals(City? x, City? y)
+        public bool Equals(City x, City y)
         {
             var span = new ReadOnlySpan<byte>(x._start, x._length);
             var spanOther = new ReadOnlySpan<byte>(y._start, y._length);
-            
+
             return span.SequenceEqual(spanOther);
         }
-        public int GetHashCode([DisallowNull] City obj)
+
+        public int GetHashCode(City obj)
         {
             if (obj._length >= 4)
                 return (obj._length * 788761) ^ (int)(*(uint*)obj._start);

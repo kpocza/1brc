@@ -55,8 +55,10 @@ unsafe class Worker
 
         do
         {
-            var r = new ReadOnlySpan<byte>(curIdx, 100);
-            var cityLength = r.IndexOf(SEP);
+            // https://en.wikipedia.org/wiki/List_of_short_place_names
+            // we have only some places with 1 char. Let's ignore them.
+            var r = new ReadOnlySpan<byte>(curIdx + 2, 98);
+            var cityLength = r.IndexOf(SEP) + 2;
 
             var city = new City(curIdx, cityLength);
 
