@@ -31,6 +31,6 @@ struct Measurement
 
     public override string ToString()
     {
-        return $"{_min / 10.0:0.0}/{_sum / _cnt / 10.0:0.0}/{_max / 10.0:0.0}";
+        return $"{_min / 10.0:0.0}/{(double)_sum / _cnt / 10.0:0.0}/{_max / 10.0:0.0}";
     }
 }

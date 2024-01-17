@@ -60,7 +60,8 @@ public unsafe class Program
                 measurement.Merge(item.Value);
             }
         }
-        
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
         Console.Write("{");
         Console.Write(string.Join(", ", final.Measurements
             .Select(m => (City: m.Key.ToString(), Measurement: m.Value))
