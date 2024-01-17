@@ -53,11 +53,9 @@ unsafe class Worker
 
         do
         {
-            // https://en.wikipedia.org/wiki/List_of_short_place_names
-            // we have only some places in the world with one letter long name.
-            // let's ignore them and gain some time when finding the ; character.
-            var r = new ReadOnlySpan<byte>(curIdx + 2, 98);
-            var cityLength = r.IndexOf(SEP) + 2;
+            // minlen: 1 byte
+            var r = new ReadOnlySpan<byte>(curIdx + 1, 100);
+            var cityLength = r.IndexOf(SEP) + 1;
 
             var city = new City(curIdx, cityLength);
 
