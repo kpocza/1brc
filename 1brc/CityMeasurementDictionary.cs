@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
+using System.Runtime.CompilerServices;
 
 internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measurement>>
 {
-    // dictionary must store 10000 items at maximum
-    static readonly int SIZE = 16384;
-    static readonly int MASK = SIZE - 1;
+    // dictionary must store 10000 items at maximum. next prime in hashhelpers
+    private static readonly int SIZE = 10103;
+    private static readonly ulong _fastModMultiplier = ulong.MaxValue / (uint)SIZE + 1;
 
     private int _count;
     private readonly int[] _buckets;
@@ -27,38 +27,41 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
         public City key;
         public Measurement value;
     }
-    
+
     public ref Measurement GetValueRefOrAddDefault(City key)
     {
         uint hashCode = (uint)_comparer.GetHashCode(key);
 
-        int mod = (int)(hashCode & MASK);
-        int bucket = _buckets[mod];
-        int i = bucket - 1;
+        uint bucketIndex = GetBucketIndex(hashCode); ;
+        int bucket = _buckets[bucketIndex];
+        int index = bucket - 1;
 
-        while ((uint)i < (uint)_entries.Length)
+        while ((uint)index < (uint)_entries.Length)
         {
-            ref Entry entry = ref _entries[i];
+            ref Entry entry = ref _entries[index];
 
             if (entry.hashCode == hashCode && _comparer.Equals(entry.key, key))
             {
                 return ref entry.value!;
             }
 
-            i = entry.next;
+            index = entry.next;
         }
 
-        int index = _count++;
+        index = _count++;
 
         ref Entry newEntry = ref _entries[index];
         newEntry.hashCode = hashCode;
         newEntry.next = bucket - 1;
         newEntry.key = key;
         newEntry.value = new Measurement();
-        _buckets[mod] = index + 1;
+        _buckets[bucketIndex] = index + 1;
 
         return ref newEntry.value!;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint GetBucketIndex(uint value) => (uint)(((((_fastModMultiplier * value) >> 32) + 1) * (uint)SIZE) >> 32);
 
     IEnumerator<KeyValuePair<City, Measurement>> IEnumerable<KeyValuePair<City, Measurement>>.GetEnumerator()
     {

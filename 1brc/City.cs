@@ -34,7 +34,7 @@ unsafe struct City
             int hash = 0;
             while (idx < obj._length)
             {
-                hash = hash * 256 + (*pos);
+                hash = hash * 31 + (*pos);
                 pos++;
                 idx++;
             }
