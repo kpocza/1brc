@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
-using System.Runtime.InteropServices;
 
 public unsafe class Program
 {
@@ -56,7 +54,7 @@ public unsafe class Program
         {
             foreach(var item in worker.Measurements)
             {
-                ref var measurement = ref CollectionsMarshal.GetValueRefOrAddDefault(final.Measurements, item.Key, out bool exist);
+                ref var measurement = ref final.Measurements.GetValueRefOrAddDefault(item.Key);
                 measurement.Merge(item.Value);
             }
         }

@@ -8,17 +8,16 @@ unsafe class Worker
     private long _start;
     private long _end;
     private Thread? _thread;
-    private Dictionary<City, Measurement> _measurements;
+    private CityMeasurementDictionary _measurements;
     
-    internal Dictionary<City, Measurement> Measurements => _measurements;
+    internal CityMeasurementDictionary Measurements => _measurements;
 
     internal Worker(byte *pointer, long start, long end)
     {
         _pointer = pointer;
         _start = start; 
         _end = end;
-        // comparer is a little bit faster after checking Dictionary's source code
-        _measurements = new Dictionary<City, Measurement>(10000, new City.CityComparer());
+        _measurements = new CityMeasurementDictionary();
     }
 
     internal void Start()
@@ -63,7 +62,7 @@ unsafe class Worker
 
             int m = ParseTemperature(ref curIdx);
 
-            ref var measurement = ref CollectionsMarshal.GetValueRefOrAddDefault(_measurements, city, out bool exist);
+            ref var measurement = ref _measurements.GetValueRefOrAddDefault(city);
             // default is initialized to full zero. don't need to check bool exist
             measurement.Apply((short)m);
         } while (curIdx < localEnd);

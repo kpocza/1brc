@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 
 unsafe struct City
 {
@@ -13,6 +14,7 @@ unsafe struct City
 
     internal class CityComparer : IEqualityComparer<City>
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(City x, City y)
         {
             var span = new ReadOnlySpan<byte>(x._start, x._length);
@@ -21,6 +23,7 @@ unsafe struct City
             return span.SequenceEqual(spanOther);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetHashCode(City obj)
         {
             if (obj._length >= 4)
