@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measurement>>
 {
@@ -20,12 +21,13 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
         _count = 0;
     }
 
+    [StructLayout(LayoutKind.Sequential, Size = 192)]
     private struct Entry
     {
-        public uint hashCode;
-        public int next;
-        public City key;
-        public Measurement value;
+        public City key; //112
+        public uint hashCode; //4
+        public int next; //4
+        public Measurement value; //16
     }
 
     public ref Measurement GetValueRefOrAddDefault(City key)

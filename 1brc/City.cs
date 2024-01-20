@@ -1,8 +1,10 @@
 ﻿using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Text;
 
+[StructLayout(LayoutKind.Sequential, Size = 112)]
 unsafe struct City
 {
     private readonly Vector256<byte> part1;

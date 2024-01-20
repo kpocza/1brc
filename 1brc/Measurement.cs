@@ -1,11 +1,13 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
+[StructLayout(LayoutKind.Sequential, Size = 16)]
 struct Measurement
 {
     internal short _min;
     private short _max;
-    private long _sum;
     private int _cnt;
+    private long _sum;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Apply(short m)
