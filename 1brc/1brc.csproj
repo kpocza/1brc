@@ -10,5 +10,6 @@
     <OptimizationPreference>Speed</OptimizationPreference>
     <IlcInstructionSet>native</IlcInstructionSet>
     <PublishAot>true</PublishAot>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 </Project>
