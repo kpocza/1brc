@@ -61,7 +61,7 @@ unsafe class Worker
             curIdx += cityLength + 1;
 
             int m = ParseTemperature(ref curIdx);
-
+            
             ref var measurement = ref _measurements.GetValueRefOrAddDefault(city);
             // default is initialized to full zero. don't need to check bool exist
             measurement.Apply((short)m);

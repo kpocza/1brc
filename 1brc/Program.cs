@@ -22,6 +22,7 @@ public unsafe class Program
 
         var length = new FileInfo(filePath).Length;
         var chunkCount = length > 10000 ? Environment.ProcessorCount : 1;
+        chunkCount = 1;
         var chunkSize = length / chunkCount;
 
         var memoryMappedFile = MemoryMappedFile.CreateFromFile(filePath, FileMode.Open, null, 0, MemoryMappedFileAccess.Read);
@@ -54,6 +55,10 @@ public unsafe class Program
         {
             foreach(var item in worker.Measurements)
             {
+                //if (item.Key.ToString() == "mur" && item.Value._min == -138)
+                //{
+
+                //}
                 ref var measurement = ref final.Measurements.GetValueRefOrAddDefault(item.Key);
                 measurement.Merge(item.Value);
             }

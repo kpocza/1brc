@@ -2,7 +2,7 @@
 
 struct Measurement
 {
-    private short _min;
+    internal short _min;
     private short _max;
     private long _sum;
     private int _cnt;
