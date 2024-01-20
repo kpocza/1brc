@@ -7,9 +7,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-	<PublishAot>true</PublishAot>
-	<OptimizationPreference>Speed</OptimizationPreference>
-	<IlcInstructionSet>native</IlcInstructionSet>
+    <OptimizationPreference>Speed</OptimizationPreference>
+    <IlcInstructionSet>native</IlcInstructionSet>
+    <PublishAot>true</PublishAot>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
-
 </Project>

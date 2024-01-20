@@ -65,11 +65,10 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
 
     IEnumerator<KeyValuePair<City, Measurement>> IEnumerable<KeyValuePair<City, Measurement>>.GetEnumerator()
     {
-        for (int i = 0; i < SIZE; i++)
+        for (int i = 0; i < _count; i++)
         {
             var entry = _entries[i];
-            if (entry.next != 0)
-                yield return new KeyValuePair<City, Measurement>(entry.key, entry.value);
+            yield return new KeyValuePair<City, Measurement>(entry.key, entry.value);
         }
     }
 
