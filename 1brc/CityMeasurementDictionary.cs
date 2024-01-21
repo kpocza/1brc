@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measurement>>
 {
@@ -19,20 +18,19 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
         _count = 0;
     }
 
-    [StructLayout(LayoutKind.Sequential, Size = 192)]
-    private struct Entry
+    internal struct Entry
     {
-        public City key; //112
-        public uint hashCode; //4
-        public int next; //4
-        public Measurement value; //16
+        internal City key;
+        internal uint hashCode;
+        internal int next;
+        internal Measurement value;
     }
 
     public ref Measurement GetValueRefOrAddDefault(City key)
     {
-        uint hashCode = (uint)CityComparer.GetHashCode(ref key);
+        uint hashCode = (uint)CityComparer.GetHashCode(key);
 
-        uint bucketIndex = GetBucketIndex(hashCode); ;
+        uint bucketIndex = GetBucketIndex(hashCode);
         int bucket = _buckets[bucketIndex];
         int index = bucket - 1;
 
@@ -40,7 +38,7 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
         {
             ref Entry entry = ref _entries[index];
 
-            if (entry.hashCode == hashCode && CityComparer.Equals(ref entry.key, ref key))
+            if (entry.hashCode == hashCode && CityComparer.Equals(entry.key, key))
             {
                 return ref entry.value!;
             }
@@ -60,9 +58,9 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
         return ref newEntry.value!;
     }
 
-    public ref Measurement GetValueRefOrAddDefaultVector(ref City key)
+    public ref Measurement GetValueRefOrAddDefaultVector(City key)
     {
-        uint hashCode = (uint)CityComparer.GetHashCode(ref key);
+        uint hashCode = (uint)CityComparer.GetHashCode(key);
 
         uint bucketIndex = GetBucketIndex(hashCode); ;
         int bucket = _buckets[bucketIndex];
@@ -72,7 +70,7 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
         {
             ref Entry entry = ref _entries[index];
 
-            if (entry.hashCode == hashCode && CityComparer.EqualsVector(ref entry.key, ref key))
+            if (entry.hashCode == hashCode && CityComparer.EqualsVector(entry.key, key))
             {
                 return ref entry.value!;
             }
@@ -85,8 +83,9 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
         ref Entry newEntry = ref _entries[index];
         newEntry.hashCode = hashCode;
         newEntry.next = bucket - 1;
-        newEntry.key = new City(key);
+        newEntry.key = key;
         newEntry.value = new Measurement();
+        
         _buckets[bucketIndex] = index + 1;
 
         return ref newEntry.value!;

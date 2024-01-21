@@ -53,16 +53,15 @@ unsafe class Worker
 
         if(Vector256.IsHardwareAccelerated)
         {
-            City cityCandidate = new City();
             do
             {
-                CityBuilder.Create(curIdx, ref cityCandidate);
+                var city = CityBuilder.Create(curIdx);
 
-                curIdx += cityCandidate.Length + 1;
+                curIdx += city.Length + 1;
 
                 int m = ParseTemperature(ref curIdx);
 
-                ref var measurement = ref _measurements.GetValueRefOrAddDefaultVector(ref cityCandidate);
+                ref var measurement = ref _measurements.GetValueRefOrAddDefaultVector(city);
                 // default is initialized to full zero. don't need to check bool exist
                 measurement.Apply((short)m);
             } while (curIdx < localEnd);

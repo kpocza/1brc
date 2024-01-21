@@ -73,8 +73,8 @@ namespace Tests
         [TestMethod]
         public void Fcmp()
         {
-            var f1 = File.ReadAllBytes(@"c:\Download\mreskp1b.txt");
-            var f2 = File.ReadAllBytes(@"c:\Download\mres1b.txt");
+            var f1 = File.ReadAllBytes(@"c:\Download\mres1b_hw.txt");
+            var f2 = File.ReadAllBytes(@"c:\Download\mres1b_sw.txt");
 
             for(int i = 0;i < f1.Length;i++)
             {
@@ -84,11 +84,11 @@ namespace Tests
                     Console.WriteLine(i);
                     var b1 = new byte[f1.Length - i];
                     Array.Copy(f1, i, b1, 0, f1.Length - i);
-                    File.WriteAllBytes(@"c:\Download\mreskp1b_2.txt", b1);
+                    File.WriteAllBytes(@"c:\Download\mres1b_hw_2.txt", b1);
 
                     var b2 = new byte[f2.Length - i];
                     Array.Copy(f2, i, b2, 0, f2.Length - i);
-                    File.WriteAllBytes(@"c:\Download\mres1b_2.txt", b2);
+                    File.WriteAllBytes(@"c:\Download\mres1b_sw_2.txt", b2);
                 }
             }
         }
