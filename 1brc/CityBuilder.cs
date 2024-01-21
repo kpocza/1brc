@@ -6,7 +6,7 @@ internal unsafe static class CityBuilder
 {
     const byte SEP = (byte)';';
 
-    private static readonly Vector256<byte> separator = Vector256.Create((byte)';');
+    private static readonly Vector256<byte> separator = Vector256.Create(SEP);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static City Create(byte *curIdx)
