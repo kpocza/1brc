@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 [StructLayout(LayoutKind.Sequential, Size = 16)]
 struct Measurement
 {
-    internal short _min;
+    private short _min;
     private short _max;
     private int _cnt;
     private long _sum;

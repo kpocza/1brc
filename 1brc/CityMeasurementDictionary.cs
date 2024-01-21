@@ -11,13 +11,11 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
     private int _count;
     private readonly int[] _buckets;
     private readonly Entry[] _entries;
-    private readonly City.CityComparer _comparer;
 
     public CityMeasurementDictionary()
     {
         _buckets = new int[SIZE];
         _entries = new Entry[SIZE];
-        _comparer = new City.CityComparer();
         _count = 0;
     }
 
@@ -32,7 +30,7 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
 
     public ref Measurement GetValueRefOrAddDefault(City key)
     {
-        uint hashCode = (uint)_comparer.GetHashCode(key);
+        uint hashCode = (uint)CityComparer.GetHashCode(ref key);
 
         uint bucketIndex = GetBucketIndex(hashCode); ;
         int bucket = _buckets[bucketIndex];
@@ -42,7 +40,7 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
         {
             ref Entry entry = ref _entries[index];
 
-            if (entry.hashCode == hashCode && _comparer.Equals(entry.key, key))
+            if (entry.hashCode == hashCode && CityComparer.Equals(ref entry.key, ref key))
             {
                 return ref entry.value!;
             }
@@ -56,6 +54,38 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
         newEntry.hashCode = hashCode;
         newEntry.next = bucket - 1;
         newEntry.key = key;
+        newEntry.value = new Measurement();
+        _buckets[bucketIndex] = index + 1;
+
+        return ref newEntry.value!;
+    }
+
+    public ref Measurement GetValueRefOrAddDefaultVector(ref City key)
+    {
+        uint hashCode = (uint)CityComparer.GetHashCode(ref key);
+
+        uint bucketIndex = GetBucketIndex(hashCode); ;
+        int bucket = _buckets[bucketIndex];
+        int index = bucket - 1;
+
+        while ((uint)index < (uint)_entries.Length)
+        {
+            ref Entry entry = ref _entries[index];
+
+            if (entry.hashCode == hashCode && CityComparer.EqualsVector(ref entry.key, ref key))
+            {
+                return ref entry.value!;
+            }
+
+            index = entry.next;
+        }
+
+        index = _count++;
+
+        ref Entry newEntry = ref _entries[index];
+        newEntry.hashCode = hashCode;
+        newEntry.next = bucket - 1;
+        newEntry.key = new City(key);
         newEntry.value = new Measurement();
         _buckets[bucketIndex] = index + 1;
 

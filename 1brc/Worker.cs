@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 
 unsafe class Worker
 {
@@ -50,22 +51,41 @@ unsafe class Worker
         while ((*localEnd) != NL)
             localEnd++;
 
-        do
+        if(Vector256.IsHardwareAccelerated)
         {
-            // minlen: 1 byte
-            var r = new ReadOnlySpan<byte>(curIdx + 1, 100);
-            var cityLength = r.IndexOf(SEP) + 1;
+            City cityCandidate = new City();
+            do
+            {
+                CityBuilder.Create(curIdx, ref cityCandidate);
 
-            var city = new City(curIdx, cityLength);
+                curIdx += cityCandidate.Length + 1;
 
-            curIdx += cityLength + 1;
+                int m = ParseTemperature(ref curIdx);
 
-            int m = ParseTemperature(ref curIdx);
-            
-            ref var measurement = ref _measurements.GetValueRefOrAddDefault(city);
-            // default is initialized to full zero. don't need to check bool exist
-            measurement.Apply((short)m);
-        } while (curIdx < localEnd);
+                ref var measurement = ref _measurements.GetValueRefOrAddDefaultVector(ref cityCandidate);
+                // default is initialized to full zero. don't need to check bool exist
+                measurement.Apply((short)m);
+            } while (curIdx < localEnd);
+        }
+        else
+        {
+            do
+            {
+                // minlen: 1 byte
+                var r = new ReadOnlySpan<byte>(curIdx + 1, 100);
+                var cityLength = r.IndexOf(SEP) + 1;
+
+                var city = new City(curIdx, cityLength);
+
+                curIdx += city.Length + 1;
+
+                int m = ParseTemperature(ref curIdx);
+
+                ref var measurement = ref _measurements.GetValueRefOrAddDefault(city);
+                // default is initialized to full zero. don't need to check bool exist
+                measurement.Apply((short)m);
+            } while (curIdx < localEnd);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

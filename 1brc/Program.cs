@@ -68,6 +68,6 @@ public unsafe class Program
         Console.WriteLine("}");
 
         sw.Stop();
-        Console.WriteLine(sw.Elapsed);
+        Console.WriteLine(string.Format($"{sw.Elapsed}, {System.Runtime.Intrinsics.Vector256.IsHardwareAccelerated}"));
     }
 }
