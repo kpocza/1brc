@@ -9,6 +9,12 @@ struct Measurement
     private int _cnt;
     private long _sum;
 
+    public Measurement()
+    {
+        _min = 999;
+        _max = -999;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Apply(short m)
     {

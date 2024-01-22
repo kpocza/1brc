@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 
 unsafe class Worker
@@ -90,43 +88,33 @@ unsafe class Worker
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int ParseTemperature(ref byte* curIdx)
     {
-        // hacky version of number parsing between -99.9 and 99.9
+        // hacky version of number parsing between -99.9 and 99.9. result is between -999 and 999
+
+        // - sign (ascii 45) or a number (ascii 48-57) can come here. - has no 4th bit set, numbers have.
+        // result: 0 for unsigned numbers, 1 for signed numbers
         var signIndicator = 1 - (((*curIdx) & 0x10) >> 4);
+        // jump over -
         curIdx += signIndicator;
+        // multiplicator: 1 or -1
         int sign = 1 - (signIndicator << 1);
 
         int num = *(int*)curIdx;
 
+        // num's format is: 32.1 or 2.1. respectively num is 0x01..0203 or 0x0001..02
+        // a . character (ascii 46) or a number (ascii 48-57) can be the second byte
+        // if second byte's 4th bit is non-zero, then it's at least 10 as no decimal point is there
         int lessThan10NumberIndicator = 1 - ((num & 0x1000) >> 12);
+        // shift numbers to common format: 0x01..0203 and 0x01..0200
         num <<= (lessThan10NumberIndicator << 3);
+        // eliminate . character: 0x01000203
         num &= 0x0f000f0f;
+        // jump over the \n after the number, as well
         curIdx += 5 - lessThan10NumberIndicator;
+        //100*0x1000000*0x01000203 + 10*0x10000*0x01000203 + 1*0x01000203 =
+        // 0x(100*0x03 + 10*0x02 + 1*0x01)(100*0 + 10*0x03 + 1*0)(100*0 + 10*0 + 1*0x02)(100*0 + 10*0 + 1*0x03)
+        //    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // 100*0x3... is more than 255 so next bits are also occupied
+        // from the 24th bit we have our number multiplied by 10
         return sign * (int)((((long)num * 0x640a0001) >> 24) & 0x3FF);
-
-/*      const byte DOT = (byte)'.';
-        const byte NEG = (byte)'-';
-        const byte ZERO = (byte)'0';
-
-        int sign = 1;
-        if ((*curIdx) == NEG)
-        {
-            sign = -1;
-            curIdx++;
-        }
-
-        int m = 0;
-        // handling temperature between -99.9 and 99.9 is enough. Simplify double parsing knowing this fact.
-        if ((*(curIdx + 1)) == DOT)
-        {
-            m = sign * ((*curIdx - ZERO) * 10 + *(curIdx + 2) - ZERO);
-            curIdx += 4;
-        }
-        else
-        {
-            m = sign * ((*curIdx - ZERO) * 100 + (*(curIdx + 1) - ZERO) * 10 + *(curIdx + 3) - ZERO);
-            curIdx += 5;
-        }
-
-        return m;*/
     }
 }

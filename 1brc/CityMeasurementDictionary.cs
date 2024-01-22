@@ -3,17 +3,18 @@ using System.Runtime.CompilerServices;
 
 internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measurement>>
 {
-    // dictionary must store 10000 items at maximum. next prime in hashhelpers
-    private static readonly int SIZE = 10103;
+    // dictionary must store 10000 items at maximum. next primes in hashhelpers to choose from
+    // 10103, 12143, 14591, 17519, 21023, 25229, 30293, 36353, 43627
+    private static readonly int SIZE = 21023;
     private static readonly ulong _fastModMultiplier = ulong.MaxValue / (uint)SIZE + 1;
 
     private int _count;
-    private readonly int[] _buckets;
+    private readonly short[] _buckets;
     private readonly Entry[] _entries;
 
     public CityMeasurementDictionary()
     {
-        _buckets = new int[SIZE];
+        _buckets = new short[SIZE];
         _entries = new Entry[SIZE];
         _count = 0;
     }
@@ -53,7 +54,7 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
         newEntry.next = bucket - 1;
         newEntry.key = key;
         newEntry.value = new Measurement();
-        _buckets[bucketIndex] = index + 1;
+        _buckets[bucketIndex] = (short)(index + 1);
 
         return ref newEntry.value!;
     }
@@ -85,8 +86,8 @@ internal class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measur
         newEntry.next = bucket - 1;
         newEntry.key = key;
         newEntry.value = new Measurement();
-        
-        _buckets[bucketIndex] = index + 1;
+
+        _buckets[bucketIndex] = (short)(index + 1);
 
         return ref newEntry.value!;
     }
