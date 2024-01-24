@@ -11,5 +11,7 @@
     <IlcInstructionSet>native</IlcInstructionSet>
     <PublishAot>true</PublishAot>
     <PlatformTarget>x64</PlatformTarget>
+    <TieredPGO>True</TieredPGO>
+    <ServerGarbageCollection>True</ServerGarbageCollection>
   </PropertyGroup>
 </Project>

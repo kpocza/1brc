@@ -59,7 +59,7 @@ unsafe class Worker
 
                 int m = ParseTemperature(ref curIdx);
 
-                ref var measurement = ref _measurements.GetValueRefOrAddDefaultVector(city);
+                ref var measurement = ref _measurements.GetValueRefOrAddDefaultVector(in city);
                 // default is initialized to full zero. don't need to check bool exist
                 measurement.Apply((short)m);
             } while (curIdx < localEnd);
@@ -78,7 +78,7 @@ unsafe class Worker
 
                 int m = ParseTemperature(ref curIdx);
 
-                ref var measurement = ref _measurements.GetValueRefOrAddDefault(city);
+                ref var measurement = ref _measurements.GetValueRefOrAddDefault(in city);
                 // default is initialized to full zero. don't need to check bool exist
                 measurement.Apply((short)m);
             } while (curIdx < localEnd);

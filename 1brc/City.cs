@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 
 unsafe struct City
 {
@@ -14,5 +15,11 @@ unsafe struct City
     public override string ToString()
     {
         return Encoding.UTF8.GetString(Start, Length);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void CopyTo(byte *target)
+    {
+        new ReadOnlySpan<byte>(Start, Length).CopyTo(new Span<byte>(target, Length));
     }
 }
