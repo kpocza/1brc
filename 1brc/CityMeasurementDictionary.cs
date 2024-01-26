@@ -14,6 +14,8 @@ internal unsafe class CityMeasurementDictionary : IEnumerable<KeyValuePair<City,
     private readonly short[] _buckets;
     private readonly Entry[] _entries;
     private readonly byte* _localCities;
+    private readonly short* _bucketsHead;
+    private readonly Entry* _entriesHead;
 
     public CityMeasurementDictionary()
     {
@@ -22,6 +24,9 @@ internal unsafe class CityMeasurementDictionary : IEnumerable<KeyValuePair<City,
         _localCities = (byte*)NativeMemory.AlignedAlloc((nuint)SIZE * 32, 32);
         NativeMemory.Clear(_localCities, (nuint)SIZE * 32);
         _count = 0;
+
+        _bucketsHead = (short*)Unsafe.AsPointer(ref _buckets[0]);
+        _entriesHead = (Entry*)Unsafe.AsPointer(ref _entries[0]);
     }
 
     internal struct Entry
@@ -37,12 +42,12 @@ internal unsafe class CityMeasurementDictionary : IEnumerable<KeyValuePair<City,
         uint hashCode = (uint)CityComparer.GetHashCode(in key);
 
         uint bucketIndex = GetBucketIndex(hashCode);
-        int bucket = _buckets[bucketIndex];
+        int bucket = *(_bucketsHead + bucketIndex);
         int index = bucket - 1;
 
         while ((uint)index < (uint)_entries.Length)
         {
-            ref Entry entry = ref _entries[index];
+            ref Entry entry = ref *(_entriesHead + index);
 
             if (entry.hashCode == hashCode && CityComparer.Equals(in entry.key, _localCities + index * 32, in key))
             {
@@ -54,12 +59,12 @@ internal unsafe class CityMeasurementDictionary : IEnumerable<KeyValuePair<City,
 
         index = _count++;
 
-        ref Entry newEntry = ref _entries[index];
+        ref Entry newEntry = ref *(_entriesHead + index);
         newEntry.hashCode = hashCode;
         newEntry.next = bucket - 1;
         newEntry.key = key;
         newEntry.value = new Measurement();
-        _buckets[bucketIndex] = (short)(index + 1);
+        *(_bucketsHead + bucketIndex) = (short)(index + 1);
 
         if (key.Length <= 32)
             key.CopyTo(_localCities + index * 32);
@@ -72,12 +77,12 @@ internal unsafe class CityMeasurementDictionary : IEnumerable<KeyValuePair<City,
         uint hashCode = (uint)CityComparer.GetHashCode(in key);
 
         uint bucketIndex = GetBucketIndex(hashCode);
-        int bucket = _buckets[bucketIndex];
+        int bucket = *(_bucketsHead + bucketIndex);
         int index = bucket - 1;
 
         while ((uint)index < (uint)_entries.Length)
         {
-            ref Entry entry = ref _entries[index];
+            ref Entry entry = ref *(_entriesHead + index);
 
             if (entry.hashCode == hashCode && CityComparer.EqualsVector(in entry.key, _localCities + index * 32, in key))
             {
@@ -89,12 +94,12 @@ internal unsafe class CityMeasurementDictionary : IEnumerable<KeyValuePair<City,
 
         index = _count++;
 
-        ref Entry newEntry = ref _entries[index];
+        ref Entry newEntry = ref *(_entriesHead + index);
         newEntry.hashCode = hashCode;
         newEntry.next = bucket - 1;
         newEntry.key = key;
         newEntry.value = new Measurement();
-        _buckets[bucketIndex] = (short)(index + 1);
+        *(_bucketsHead + bucketIndex) = (short)(index + 1);
 
         if (key.Length <= 32)
             key.CopyTo(_localCities + index * 32);

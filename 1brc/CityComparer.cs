@@ -25,7 +25,7 @@ internal unsafe static class CityComparer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool Equals(in City keyCity, byte* keyData, in City otherCity)
     {
-        var span = new ReadOnlySpan<byte>(keyCity.Length <=32 ? keyData : keyCity.Start, keyCity.Length);
+        var span = new ReadOnlySpan<byte>(keyCity.Length <= 32 ? keyData : keyCity.Start, keyCity.Length);
         var spanOther = new ReadOnlySpan<byte>(otherCity.Start, otherCity.Length);
 
         return span.SequenceEqual(spanOther);
@@ -37,26 +37,25 @@ internal unsafe static class CityComparer
         if (keyCity.Length != otherCity.Length)
             return false;
 
-        var len = keyCity.Length;
-
-        if(len <= 32)
+        if(keyCity.Length <= 32)
         {
             var v1 = Vector256.Load(keyData);
             var v2 = Vector256.Load(otherCity.Start);
 
-            var vectorMask = Vector256.Load(_vectorMasksMidPtr - len);
+            var vectorMask = Vector256.Load(_vectorMasksMidPtr - keyCity.Length);
+
             return v1 == Vector256.BitwiseAnd(v2, vectorMask);
         }
 
-        return VectorComparerCore(keyCity, otherCity);
+        return VectorComparerCore(in keyCity, in otherCity);
     }
 
-    private static bool VectorComparerCore(City keyCity, City otherCity)
+    private static bool VectorComparerCore(in City keyCity, in City otherCity)
     {
         int remaining = keyCity.Length;
         int pos = 0;
 
-        for (int i = 0; i < 3 && remaining > 0; i++)
+        for (; pos < 96 && remaining > 0; pos+=32)
         {
             var v1 = Vector256.Load(keyCity.Start + pos);
             var v2 = Vector256.Load(otherCity.Start + pos);
@@ -64,16 +63,13 @@ internal unsafe static class CityComparer
             if (remaining < 32)
             {
                 var vectorMask = Vector256.Load(_vectorMasksMidPtr - remaining);
-                v1 = Vector256.BitwiseAnd(v1, vectorMask);
-                v2 = Vector256.BitwiseAnd(v2, vectorMask);
 
-                return v1 == v2;
+                return Vector256.BitwiseAnd(v1, vectorMask) == Vector256.BitwiseAnd(v2, vectorMask);
             }
             if (v1 != v2)
                 return false;
 
             remaining -= 32;
-            pos += 32;
         }
 
         while (remaining > 0)
@@ -90,9 +86,6 @@ internal unsafe static class CityComparer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static int GetHashCode(in City obj)
     {
-        if (obj.Length >= 3)
-            return (obj.Length * 788761) ^ (int)(*(uint*)obj.Start);
-
-        return (obj.Length * 788761) ^ (int)(*(ushort*)obj.Start);
+        return (obj.Length * 788761) ^ (obj.Length >= 3 ? (int)(*(uint*)obj.Start) : (int)(*(ushort*)obj.Start));
     }
 }

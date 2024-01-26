@@ -1,21 +1,22 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
 
 unsafe class Worker
 {
     private byte* _pointer;
     private long _start;
     private long _end;
+    private readonly bool _isClassic;
     private Thread? _thread;
     private CityMeasurementDictionary _measurements;
     
     internal CityMeasurementDictionary Measurements => _measurements;
 
-    internal Worker(byte *pointer, long start, long end)
+    internal Worker(byte *pointer, long start, long end, bool isClassic)
     {
         _pointer = pointer;
         _start = start; 
         _end = end;
+        _isClassic = isClassic;
         _measurements = new CityMeasurementDictionary();
     }
 
@@ -49,22 +50,7 @@ unsafe class Worker
         while ((*localEnd) != NL)
             localEnd++;
 
-        if(Vector256.IsHardwareAccelerated)
-        {
-            do
-            {
-                var city = CityBuilder.Create(curIdx);
-
-                curIdx += city.Length + 1;
-
-                int m = ParseTemperature(ref curIdx);
-
-                ref var measurement = ref _measurements.GetValueRefOrAddDefaultVector(in city);
-                // default is initialized to full zero. don't need to check bool exist
-                measurement.Apply((short)m);
-            } while (curIdx < localEnd);
-        }
-        else
+        if (_isClassic)
         {
             do
             {
@@ -79,7 +65,20 @@ unsafe class Worker
                 int m = ParseTemperature(ref curIdx);
 
                 ref var measurement = ref _measurements.GetValueRefOrAddDefault(in city);
-                // default is initialized to full zero. don't need to check bool exist
+                measurement.Apply((short)m);
+            } while (curIdx < localEnd);
+        }
+        else
+        {
+            do
+            {
+                var city = CityBuilder.Create(curIdx);
+
+                curIdx += city.Length + 1;
+
+                int m = ParseTemperature(ref curIdx);
+
+                ref var measurement = ref _measurements.GetValueRefOrAddDefaultVector(in city);
                 measurement.Apply((short)m);
             } while (curIdx < localEnd);
         }

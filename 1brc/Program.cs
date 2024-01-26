@@ -5,21 +5,19 @@ public unsafe class Program
 {
     static void Main(string[] args)
     {
-        if(args.Length!= 1)
+        if(args.Length < 1)
         {
-            Console.WriteLine("Pass input as argument");
+            Console.WriteLine("Pass input as argument.");
             return;
         }
 
         var filePath = args[0];
-        new Program().Run(filePath);
+        var isClassic = args.Length > 1 && args[1] == "/classic";
+        new Program().Run(filePath, isClassic);
     }
 
-    private void Run(string filePath)
+    private void Run(string filePath, bool isClassic)
     {
-        var sw = new Stopwatch();
-        sw.Start();
-
         var length = new FileInfo(filePath).Length;
         var chunkCount = length > 10000 ? Environment.ProcessorCount : 1;
         var chunkSize = length / chunkCount;
@@ -42,12 +40,16 @@ public unsafe class Program
             if(idx == chunkCount - 1)
                 end = length - 1;
 
-            workers.Add(new Worker(pointer, start, end));
-            //workers.Last().ProcessChunk();
+            workers.Add(new Worker(pointer, start, end, isClassic));
+#if DEBUG
+            workers.Last().ProcessChunk();
+#endif
         }
+
+#if !DEBUG
         workers.ForEach(w => w.Start());
         workers.ForEach(w => w.Wait());
-
+#endif
         var final = workers[0];
 
         foreach (var worker in workers.Skip(1))
@@ -66,8 +68,5 @@ public unsafe class Program
             .OrderBy(m => m.City, StringComparer.Ordinal).Select(m => $"{m.City}={m.Measurement}")));
 
         Console.WriteLine("}");
-
-        sw.Stop();
-        Console.WriteLine(string.Format($"{sw.Elapsed}, {System.Runtime.Intrinsics.Vector256.IsHardwareAccelerated}"));
     }
 }
