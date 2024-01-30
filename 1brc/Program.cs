@@ -18,7 +18,8 @@ public unsafe class Program
 
     private void Run(string filePath, bool isClassic)
     {
-        var length = new FileInfo(filePath).Length;
+        var fileInfo = new FileInfo(filePath);
+        var length = fileInfo.LinkTarget == null ? fileInfo.Length : new FileInfo(fileInfo.LinkTarget).Length;
         var chunkCount = length > 10000 ? Environment.ProcessorCount : 1;
         var chunkSize = length / chunkCount;
 
