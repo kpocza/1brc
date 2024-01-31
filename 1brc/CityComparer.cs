@@ -23,7 +23,7 @@ internal unsafe static class CityComparer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool Equals(in City keyCity, byte* keyData, in City otherCity)
+    internal static bool EqualsClassic(in City keyCity, byte* keyData, in City otherCity)
     {
         var span = new ReadOnlySpan<byte>(keyCity.Length <= 32 ? keyData : keyCity.Start, keyCity.Length);
         var spanOther = new ReadOnlySpan<byte>(otherCity.Start, otherCity.Length);
@@ -32,33 +32,30 @@ internal unsafe static class CityComparer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool EqualsVector(in City keyCity, byte* keyData, in City otherCity)
+    internal static bool EqualsShort(byte* keyData, in City otherCity)
     {
-        if (keyCity.Length != otherCity.Length)
-            return false;
+        var v1 = Vector256.Load(keyData);
+        var v2 = Vector256.Load(otherCity.Start);
 
-        if(keyCity.Length <= 32)
-        {
-            var v1 = Vector256.Load(keyData);
-            var v2 = Vector256.Load(otherCity.Start);
+        var vectorMask = Vector256.Load(_vectorMasksMidPtr - otherCity.Length);
 
-            var vectorMask = Vector256.Load(_vectorMasksMidPtr - keyCity.Length);
-
-            return v1 == Vector256.BitwiseAnd(v2, vectorMask);
-        }
-
-        return VectorComparerCore(in keyCity, in otherCity);
+        return v1 == Vector256.BitwiseAnd(v2, vectorMask);
     }
 
-    private static bool VectorComparerCore(in City keyCity, in City otherCity)
+    internal static bool EqualsLong(in City keyCity, in City otherCity)
     {
-        int remaining = keyCity.Length;
-        int pos = 0;
+        var v1 = Vector256.Load(keyCity.Start);
+        var v2 = Vector256.Load(otherCity.Start);
+        if (v1 != v2)
+            return false;
 
-        for (; pos < 96 && remaining > 0; pos+=32)
+        int remaining = keyCity.Length - 32;
+        int pos = 32;
+
+        for (; pos < 96 && remaining > 0; pos += 32)
         {
-            var v1 = Vector256.Load(keyCity.Start + pos);
-            var v2 = Vector256.Load(otherCity.Start + pos);
+            v1 = Vector256.Load(keyCity.Start + pos);
+            v2 = Vector256.Load(otherCity.Start + pos);
 
             if (remaining < 32)
             {

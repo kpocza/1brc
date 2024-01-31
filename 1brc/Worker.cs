@@ -28,7 +28,7 @@ unsafe class Worker
 
     internal void Wait()
     {
-        _thread.Join();
+        _thread!.Join();
     }
 
     internal void ProcessChunk()
@@ -64,7 +64,7 @@ unsafe class Worker
 
                 int m = ParseTemperature(ref curIdx);
 
-                ref var measurement = ref _measurements.GetValueRefOrAddDefault(in city);
+                ref var measurement = ref _measurements.GetValueRefOrAddDefaultClassic(in city);
                 measurement.Apply((short)m);
             } while (curIdx < localEnd);
         }
@@ -78,9 +78,12 @@ unsafe class Worker
 
                 int m = ParseTemperature(ref curIdx);
 
-                ref var measurement = ref _measurements.GetValueRefOrAddDefaultVector(in city);
+                ref var measurement = ref _measurements.GetValueRefOrAddDefault(in city);
                 measurement.Apply((short)m);
             } while (curIdx < localEnd);
+#if DEBUG
+            Console.WriteLine(_measurements.c * 100.0 / _measurements.a);
+#endif
         }
     }
 

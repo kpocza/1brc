@@ -1,13 +1,12 @@
 ﻿using System.Collections;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 internal unsafe class CityMeasurementDictionary : IEnumerable<KeyValuePair<City, Measurement>>
 {
     // dictionary must store 10000 items at maximum. next primes in hashhelpers to choose from
-    // 10103, 12143, 14591, 17519, 21023, 25229, 30293
+    // 10103, 12143, 14591, 17519, 21023, 25229, 30293, 36353, 43627
     private static readonly int SIZE = 10010;
-    private static readonly int BUCKETCOUNT = 25229;
+    private static readonly int BUCKETCOUNT = 43627;
     private static readonly ulong _fastModMultiplier = ulong.MaxValue / (uint)BUCKETCOUNT + 1;
 
     private int _count;
@@ -38,7 +37,7 @@ internal unsafe class CityMeasurementDictionary : IEnumerable<KeyValuePair<City,
         internal int next;
     }
 
-    public ref Measurement GetValueRefOrAddDefault(in City key)
+    public ref Measurement GetValueRefOrAddDefaultClassic(in City key)
     {
         uint hashCode = (uint)CityComparer.GetHashCode(in key);
 
@@ -50,7 +49,7 @@ internal unsafe class CityMeasurementDictionary : IEnumerable<KeyValuePair<City,
         {
             ref Entry entry = ref *(_entriesHead + index);
 
-            if (entry.hashCode == hashCode && CityComparer.Equals(in entry.key, _localCitiesHead + index * 32, in key))
+            if (entry.hashCode == hashCode && CityComparer.EqualsClassic(in entry.key, _localCitiesHead + index * 32, in key))
             {
                 return ref entry.value!;
             }
@@ -73,7 +72,11 @@ internal unsafe class CityMeasurementDictionary : IEnumerable<KeyValuePair<City,
         return ref newEntry.value!;
     }
 
-    public ref Measurement GetValueRefOrAddDefaultVector(in City key)
+#if DEBUG
+    public int c = 0;
+    public int a = 0;
+#endif
+    public ref Measurement GetValueRefOrAddDefault(in City key)
     {
         uint hashCode = (uint)CityComparer.GetHashCode(in key);
 
@@ -81,16 +84,41 @@ internal unsafe class CityMeasurementDictionary : IEnumerable<KeyValuePair<City,
         int bucket = *(_bucketsHead + bucketIndex);
         int index = bucket - 1;
 
-        while ((uint)index < (uint)_entries.Length)
+        if (key.Length < 32)
         {
-            ref Entry entry = ref *(_entriesHead + index);
-
-            if (entry.hashCode == hashCode && CityComparer.EqualsVector(in entry.key, _localCitiesHead + index * 32, in key))
+            while ((uint)index < (uint)_entries.Length)
             {
-                return ref entry.value!;
-            }
+                ref Entry entry = ref *(_entriesHead + index);
+#if DEBUG
+                a++;
+#endif
+                // don't need to check hash and length just compare at most 31 bytes of data
+                // bytes after the length of the city (max 31) are set to \0 which substitutes length comparison
+                // utf-8 characters cannot have 0 as the last byte, and the test set doesn't allow \0 character in the name of the city
+                if (CityComparer.EqualsShort(_localCitiesHead + index * 32, in key))
+                {
+                    return ref entry.value!;
+                }
+#if DEBUG
+                c++;
+#endif
 
-            index = entry.next;
+                index = entry.next;
+            }
+        }
+        else
+        {
+            while ((uint)index < (uint)_entries.Length)
+            {
+                ref Entry entry = ref *(_entriesHead + index);
+
+                if (entry.hashCode == hashCode && CityComparer.EqualsLong(in entry.key, in key))
+                {
+                    return ref entry.value!;
+                }
+
+                index = entry.next;
+            }
         }
 
         index = _count++;
@@ -102,7 +130,7 @@ internal unsafe class CityMeasurementDictionary : IEnumerable<KeyValuePair<City,
         newEntry.value = new Measurement();
         *(_bucketsHead + bucketIndex) = (short)(index + 1);
 
-        if (key.Length <= 32)
+        if (key.Length < 32)
             key.CopyTo(_localCitiesHead + index * 32);
 
         return ref newEntry.value!;
